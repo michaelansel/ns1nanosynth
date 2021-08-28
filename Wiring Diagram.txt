@@ -1,0 +1,6 @@
+Wiring Diagram
+
+Pins 2,3 (i2c: SDA,SCL) -> MCP4451-103 (10k) quad digipot IC
+Pin 4 -> DAC Slave Select (MCP4922)
+Pins 9,10 -> HiFi output circuit for Mozzi ("M->")
+Pin A0 <- Mozzi input circuit? "M<-"
