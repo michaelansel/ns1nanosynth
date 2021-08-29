@@ -5,6 +5,7 @@ void MozziInit();
 #include "digipots.h"
 #include "dac.h"
 #include "midi.h"
+#include "quantizer.h"
 
 /* 
  * Boilerplate connecting code
@@ -18,6 +19,7 @@ void setup()
   DigipotInit();
   DacInit();
   MozziInit();
+  QuantizerInit();
 
   Serial.println("\nSetup Done");
 }
@@ -59,10 +61,13 @@ void updateControl(){
     // Looping envelope
     kEnvelope.start();
   }
-
   gain = envgain;
+
+  // Quantize 1V/oct ADC1 -> DAC0
+  DAC.analogWrite(quantizeAdcToDac(mozziAnalogRead(A1)), 0);
 }
 
+// Update M-> (pins 9,10)
 int updateAudio(){
   return (aSin.next()*gain)>>8;
 }
