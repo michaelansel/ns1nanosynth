@@ -25,8 +25,8 @@ void setup()
 }
 
 void loop(){
-  midiHook(); // midi processing
   audioHook(); // mozzi processing
+  // put everything else in updateControl to ensure high quality audio
 }
 
 
@@ -56,6 +56,8 @@ void MozziInit() {
 }
 
 void updateControl(){
+  midiHook(); // midi processing
+
   int envgain = (int) kEnvelope.next();
   if ( envgain < 5 ){
     // Looping envelope
