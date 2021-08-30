@@ -46,6 +46,7 @@ void loop(){
 Oscil <SIN2048_NUM_CELLS, AUDIO_RATE> aSin(SIN2048_DATA);
 Ead kEnvelope(CONTROL_RATE); // resolution will be CONTROL_RATE
 int gain;
+bool envelopeEnabled = true;
 
 void MozziInit() {
   startMozzi(CONTROL_RATE);
@@ -77,6 +78,29 @@ int updateAudio(){
 void handleMidiEvent(midiEventPacket_t e) {
   if (e.header == MIDI_CC) {
     switch(e.byte2) {
+      // CC25-28 -> Enveloped VCO
+      case 25:
+        // Attack
+        // Map 0-127 -> 0-2048
+        kEnvelope.setAttack(e.byte3 << 4);
+        break;
+      case 26:
+        // Decay
+        // Map 0-127 -> 0-2048
+        kEnvelope.setDecay(e.byte3 << 4);
+        break;
+      case 27:
+        // Enable/disable looping envelope
+        // Map 0-127 -> 0-1
+        envelopeEnabled = (e.byte3 >> 6) == 1;
+        break;
+      case 28:
+        // Frequency
+        // TODO maybe change to remove division?
+        // Map 0-127 -> A1-A5, same as 1V/Oct for 0-5V
+        aSin.setFreq((int)map(e.byte3, 0, 127, 55, 880));
+        break;
+
       // CC30-33 -> Digipot A-D
       case 30 ... 33:
         // Map to pot id 0-3, and map value 0-127 -> 0-255
