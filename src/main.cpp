@@ -56,6 +56,8 @@ void MozziInit() {
   kEnvelope.set(attack,decay);
 }
 
+bool padOn = false;
+
 void updateControl(){
   midiHook(); // midi processing
 
@@ -63,6 +65,17 @@ void updateControl(){
   if ( envgain < 5 ){
     // Looping envelope
     kEnvelope.start();
+
+    byte msgOn[] = {0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x42, 0x02, 0x00, 0x10, 0x70, 0x7F, 0xF7};
+    byte msgOff[] = {0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x42, 0x02, 0x00, 0x10, 0x70, 0x00, 0xF7};
+    int bytesSent;
+    if (padOn) {
+      sendSysEx(msgOff, sizeof(msgOff) / sizeof(byte));
+      padOn=false;
+    } else {
+      sendSysEx(msgOn, sizeof(msgOn) / sizeof(byte));
+      padOn=true;
+    }
   }
   gain = envgain;
 
