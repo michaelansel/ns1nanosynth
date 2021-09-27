@@ -5,6 +5,7 @@ void MozziInit();
 #include "digipots.h"
 #include "dac.h"
 #include "midi.h"
+#include "arturia_minilabmk2.h"
 #include "quantizer.h"
 
 /* 
@@ -66,14 +67,13 @@ void updateControl(){
     // Looping envelope
     kEnvelope.start();
 
-    byte msgOn[] = {0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x42, 0x02, 0x00, 0x10, 0x70, 0x7F, 0xF7};
-    byte msgOff[] = {0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x42, 0x02, 0x00, 0x10, 0x70, 0x00, 0xF7};
-    int bytesSent;
     if (padOn) {
-      sendSysEx(msgOff, sizeof(msgOff) / sizeof(byte));
+      setPadColor(1, MINILAB_GREEN);
+      setPadColor(3, MINILAB_CYAN);
       padOn=false;
     } else {
-      sendSysEx(msgOn, sizeof(msgOn) / sizeof(byte));
+      setPadColor(1, MINILAB_BLACK);
+      setPadColor(3, MINILAB_BLACK);
       padOn=true;
     }
   }
@@ -89,6 +89,8 @@ int updateAudio(){
 }
 
 void handleMidiEvent(midiEventPacket_t e) {
+  if(handleAsMinilabEvent(e)) return;
+
   if (e.header == MIDI_CC) {
     switch(e.byte2) {
       // CC25-28 -> Enveloped VCO
@@ -135,5 +137,21 @@ void handleMidiEvent(midiEventPacket_t e) {
       default:
         break;
     }
+  }
+}
+
+
+void handleMinilabEvent(minilabEvent_t e)
+{
+  // Serial.print("minilab button ");
+  // Serial.print(e.button);
+  // Serial.print(" ");
+  // Serial.println(e.isKeyDown ? "down" : "up");
+  switch(e.button) {
+    case MINILAB_BUTTON_SHIFT:
+    case MINILAB_BUTTON_PAD_SELECT:
+    case MINILAB_BUTTON_OCTAVE_DOWN:
+    case MINILAB_BUTTON_OCTAVE_UP:
+    default:
   }
 }

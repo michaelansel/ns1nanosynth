@@ -8,13 +8,13 @@ void midiHook()
     if (e.header != 0)
     {
         // Serial.print("midi message received ");
-        // Serial.print(e.header);
+        // Serial.print(e.header, 16);
         // Serial.print(" ");
-        // Serial.print(e.byte1);
+        // Serial.print(e.byte1, 16);
         // Serial.print(" ");
-        // Serial.print(e.byte2);
+        // Serial.print(e.byte2, 16);
         // Serial.print(" ");
-        // Serial.println(e.byte3);
+        // Serial.println(e.byte3, 16);
         handleMidiEvent(e);
     }
 }

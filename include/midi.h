@@ -1,3 +1,6 @@
+#ifndef __MIDI_H__
+#define __MIDI_H__
+
 #include "main.h"
 #include "MIDIUSB.h"
 
@@ -15,3 +18,5 @@ const byte MIDI_SYSEX_END_3 = 0x7; // three more bytes
 void handleMidiEvent(midiEventPacket_t e);
 void midiHook();
 void sendSysEx(byte *data, byte length);
+
+#endif
