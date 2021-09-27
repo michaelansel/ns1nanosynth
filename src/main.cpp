@@ -153,5 +153,6 @@ void handleMinilabEvent(minilabEvent_t e)
     case MINILAB_BUTTON_OCTAVE_DOWN:
     case MINILAB_BUTTON_OCTAVE_UP:
     default:
+      break;
   }
 }
