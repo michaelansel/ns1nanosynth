@@ -95,6 +95,7 @@ void inline endSysEx()
 
 bool handleAsMinilabEvent(midiEventPacket_t e)
 {
+    // TODO pull out into a standard library looking like this: https://github.com/arduino-libraries/MIDIUSB/issues/48#issuecomment-436167901
     switch (e.header)
     {
     case MIDI_SYSEX:

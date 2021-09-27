@@ -45,6 +45,7 @@ void loop(){
 
 // use: Oscil <table_size, update_rate> oscilName (wavetable), look in .h file of table #included above
 Oscil <SIN2048_NUM_CELLS, AUDIO_RATE> aSin(SIN2048_DATA);
+Oscil <SIN2048_NUM_CELLS, CONTROL_RATE> lfo1(SIN2048_DATA);
 Ead kEnvelope(CONTROL_RATE); // resolution will be CONTROL_RATE
 int gain;
 bool envelopeEnabled = true;
@@ -65,7 +66,7 @@ void updateControl(){
   int envgain = (int) kEnvelope.next();
   if ( envgain < 5 ){
     // Looping envelope
-    kEnvelope.start();
+    if (envelopeEnabled) kEnvelope.start();
 
     if (padOn) {
       setPadColor(1, MINILAB_GREEN);
@@ -81,6 +82,9 @@ void updateControl(){
 
   // Quantize 1V/oct ADC1 -> DAC0
   DAC.analogWrite(quantizeAdcToDac(mozziAnalogRead(A1)), 0);
+
+  // Map [-128:127] -> [0:4095]
+  DAC.analogWrite((lfo1.next()+128)<<4, 1);
 }
 
 // Update M-> (pins 9,10)
@@ -92,47 +96,76 @@ void handleMidiEvent(midiEventPacket_t e) {
   if(handleAsMinilabEvent(e)) return;
 
   if (e.header == MIDI_CC) {
+    // Display via LED
+    analogWrite(13, e.byte3 << 1);
+
     switch(e.byte2) {
-      // CC25-28 -> Enveloped VCO
-      case 25:
+      // Enveloped VCO
+      case MINILAB_KNOB_2_CC:
         // Attack
         // Map 0-127 -> 0-2048
         kEnvelope.setAttack(e.byte3 << 4);
         break;
-      case 26:
+      case MINILAB_KNOB_3_CC:
         // Decay
         // Map 0-127 -> 0-2048
         kEnvelope.setDecay(e.byte3 << 4);
         break;
-      case 27:
+      case MINILAB_KNOB_10_CC:
         // Enable/disable looping envelope
         // Map 0-127 -> 0-1
         envelopeEnabled = (e.byte3 >> 6) == 1;
         break;
-      case 28:
+      case MINILAB_KNOB_11_CC:
         // Frequency
         // TODO maybe change to remove division?
         // Map 0-127 -> A1-A5, same as 1V/Oct for 0-5V
         aSin.setFreq((int)map(e.byte3, 0, 127, 55, 880));
         break;
 
-      // CC30-33 -> Digipot A-D
-      case 30 ... 33:
-        // Map to pot id 0-3, and map value 0-127 -> 0-255
-        DigipotWrite(e.byte2 - 30, e.byte3<<1);
+      // Digipot A-D
+      case MINILAB_KNOB_4_CC:
+        // Map value 0-127 -> 0-255
+        DigipotWrite(0, e.byte3<<1);
+        break;
+      case MINILAB_KNOB_5_CC:
+        // Map value 0-127 -> 0-255
+        DigipotWrite(1, e.byte3<<1);
+        break;
+      case MINILAB_KNOB_12_CC:
+        // Map value 0-127 -> 0-255
+        DigipotWrite(2, e.byte3<<1);
+        break;
+      case MINILAB_KNOB_13_CC:
+        // Map value 0-127 -> 0-255
+        DigipotWrite(3, e.byte3<<1);
         break;
 
-      // CC34 -> DAC1
-      case 34:
-        // Map 0-127 -> 0-4095
-        DAC.analogWrite(e.byte3 << 5, 1);
+      // LFO
+      case MINILAB_KNOB_6_CC:
+        // Frequency
+        // Map 0-127 -> 1/100 - 16Hz
+        float frequency = ((float)map(e.byte3, 0, 127, 1, (/*max nyquist*/CONTROL_RATE/4)*(/*divisor*/SIN2048_NUM_CELLS/CONTROL_RATE))) / (/*1 step per control update*/SIN2048_NUM_CELLS/CONTROL_RATE);
+        Serial.println(frequency);
+        lfo1.setFreq(frequency);
+        break;
+      case MINILAB_KNOB_14_CC:
+        // Phase
+        // Map 0-127 -> 0-SIN2048_NUM_CELLS
+        lfo1.setPhase(map(e.byte3, 0, 127, 0, SIN2048_NUM_CELLS));
+
+      // Undefined
+      case MINILAB_KNOB_7_CC:
+      case MINILAB_KNOB_8_CC:
+      case MINILAB_KNOB_15_CC:
+      case MINILAB_KNOB_16_CC:
         break;
 
-      // CC35-38 -> Pin 5-8 (binary)
-      case 35 ... 38:
-        // Map 0-127 -> 0-1
-        digitalWrite(e.byte2 - 30, e.byte3 >> 6);
-        break;
+      // // CC35-38 -> Pin 5-8 (binary)
+      // case 35 ... 38:
+      //   // Map 0-127 -> 0-1
+      //   digitalWrite(e.byte2 - 30, e.byte3 >> 6);
+      //   break;
       
       default:
         break;
